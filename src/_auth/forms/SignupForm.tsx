@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Loader from "@/components/shared/Loader";
 import { useToast } from "@/components/ui/use-toast";
-
+import { motion } from 'framer-motion';
 import { useCreateUserAccount, useSignInAccount } from "@/lib/react-query/queries";
 import { SignupValidation } from "@/lib/validation";
 import { useUserContext } from "@/context/AuthContext";
@@ -74,7 +74,12 @@ const SignupForm = () => {
 
   return (
     <Form {...form}>
-      <div className="sm:w-420 flex-center flex-col">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="sm:w-420 flex-center flex-col"
+      >
       <img src="/assets/images/logo.svg" alt="logo" width="100" height="100" />
 
         <h2 className="h3-bold md:h2-bold pt-5 sm:pt-12">
@@ -162,7 +167,7 @@ const SignupForm = () => {
             </Link>
           </p>
         </form>
-      </div>
+        </motion.div>
     </Form>
   );
 };
