@@ -61,14 +61,7 @@ const AllUsers = () => {
   };
 
   // Toggle sort order
-  const handleSortChange = (field: string) => {
-    if (sortBy === field) {
-      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-    } else {
-      setSortBy(field);
-      setSortOrder("asc");
-    }
-  };
+
 
   if (isErrorCreators) {
     return (
