@@ -95,7 +95,7 @@ const AllUsers = () => {
                 placeholder="Search users..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg w-full md:w-64 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="pl-10 pr-4 py-2 border border-gray-200 bg-black text-white rounded-lg w-full md:w-64 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             
@@ -107,7 +107,7 @@ const AllUsers = () => {
                   setSortBy(field);
                   setSortOrder(order);
                 }}
-                className="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-3 py-2 border border-gray-200 bg-black text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="name-asc">Name (A-Z)</option>
                 <option value="name-desc">Name (Z-A)</option>
