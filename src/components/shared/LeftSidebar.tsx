@@ -34,6 +34,7 @@ const LeftSidebar = () => {
             width={100}
             height={100}
           />
+          <h1 className="text-2xl" >ZenithNet v0.1</h1>
         </Link>
 
         {isLoading || !user.email ? (

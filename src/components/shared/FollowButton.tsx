@@ -87,8 +87,8 @@ const FollowButton = ({
       // After 1 second, show toast and revert
       setTimeout(() => {
         toast({
-          title: "Failed to follow",
-          description: `User: ${targetUserName}`,
+          title: `Failed to follow ${targetUserName}`,
+          description: `Why does that happen ? I don't actually know. Maybe ask the backend devs?`,
         });
 
         // Revert
