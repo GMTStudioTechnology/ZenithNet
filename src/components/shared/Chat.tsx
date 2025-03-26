@@ -1,338 +1,390 @@
 import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+
+// Define message type for better type safety
+interface Message {
+  id: string;
+  sender: 'bot' | 'user';
+  text: string;
+  timestamp: Date;
+}
 
 const ChatBotPlayer = () => {
-  const [expanded, setExpanded] = useState(true);
-  const [messages, setMessages] = useState([
-    { sender: 'bot', text: 'Hey! Whats up?' },
-    { sender: 'bot', text: "I'm your AI assistant. How can I help you today?" }
+  const [expanded, setExpanded] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([
+    { 
+      id: '1', 
+      sender: 'bot', 
+      text: 'Hey! I\'m your ZenithNet assistant. How can I help you today?',
+      timestamp: new Date()
+    }
   ]);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [theme, setTheme] = useState('purple'); // 'purple', 'blue', 'green', 'pink'
+  const [theme, setTheme] = useState<'purple' | 'blue' | 'green' | 'pink'>('purple');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const messageContainerRef = useRef<HTMLDivElement>(null);
 
-  // Theme color mapping
+  // Theme colors mapping
   const themeColors = {
     purple: {
       primary: 'bg-purple-600',
       hover: 'hover:bg-purple-700',
-      accent: 'text-purple-500',
       ring: 'focus:ring-purple-500',
-      light: 'bg-purple-400',
-      dark: 'bg-purple-800',
-      gradient: 'from-purple-600 to-indigo-800'
+      text: 'text-purple-500',
+      border: 'border-purple-500',
+      gradient: 'from-purple-600 to-indigo-700',
+      dot: 'bg-purple-500',
     },
     blue: {
       primary: 'bg-blue-600',
       hover: 'hover:bg-blue-700',
-      accent: 'text-blue-500',
       ring: 'focus:ring-blue-500',
-      light: 'bg-blue-400',
-      dark: 'bg-blue-800',
-      gradient: 'from-blue-600 to-cyan-800'
+      text: 'text-blue-500',
+      border: 'border-blue-500',
+      gradient: 'from-blue-600 to-cyan-700',
+      dot: 'bg-blue-500',
     },
     green: {
       primary: 'bg-emerald-600',
       hover: 'hover:bg-emerald-700',
-      accent: 'text-emerald-500',
       ring: 'focus:ring-emerald-500',
-      light: 'bg-emerald-400',
-      dark: 'bg-emerald-800',
-      gradient: 'from-emerald-600 to-teal-800'
+      text: 'text-emerald-500',
+      border: 'border-emerald-500',
+      gradient: 'from-emerald-600 to-teal-700',
+      dot: 'bg-emerald-500',
     },
     pink: {
       primary: 'bg-pink-600',
       hover: 'hover:bg-pink-700',
-      accent: 'text-pink-500',
       ring: 'focus:ring-pink-500',
-      light: 'bg-pink-400',
-      dark: 'bg-pink-800',
-      gradient: 'from-pink-600 to-rose-800'
-    }
+      text: 'text-pink-500',
+      border: 'border-pink-500',
+      gradient: 'from-pink-600 to-rose-700',
+      dot: 'bg-pink-500',
+    },
   };
 
-  // Fix: Explicitly type the theme variable for indexing
-  const currentTheme = themeColors[theme as keyof typeof themeColors];
+  const currentTheme = themeColors[theme];
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    scrollToBottom();
   }, [messages]);
 
-  // Add a nice pulse animation when the bot is typing
   useEffect(() => {
-    if (isTyping) {
-      const interval = setInterval(() => {
-        if (messageContainerRef.current) {
-          messageContainerRef.current.classList.add('pulse-subtle');
-          setTimeout(() => {
-            messageContainerRef.current?.classList.remove('pulse-subtle');
-          }, 300);
-        }
-      }, 1000);
-
-      return () => clearInterval(interval);
+    if (expanded && inputRef.current) {
+      inputRef.current.focus();
     }
-  }, [isTyping]);
+  }, [expanded]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const generateUniqueId = () => {
+    return Date.now().toString(36) + Math.random().toString(36).substr(2);
+  };
 
   const handleSendMessage = () => {
     if (inputText.trim() === '') return;
-    const newMessages = [...messages, { sender: 'user', text: inputText.trim() }];
-    setMessages(newMessages);
+    
+    const newMessage: Message = {
+      id: generateUniqueId(),
+      sender: 'user',
+      text: inputText.trim(),
+      timestamp: new Date()
+    };
+    
+    const updatedMessages = [...messages, newMessage];
+    setMessages(updatedMessages);
     const userInput = inputText.toLowerCase();
     setInputText('');
     setIsTyping(true);
 
+    // Simulate bot thinking and typing
     setTimeout(() => {
-      let botResponse = "I didn't catch that. Could you try rephrasing?";
+      let botResponse = "I didn't quite understand that. Could you rephrase?";
       
       if (userInput.includes('hello') || userInput.includes('hi')) {
-        botResponse = "Hi there! 👋 How can I assist you today?";
+        botResponse = "Hello there! 👋 How can I assist you today?";
       } else if (userInput.includes('time')) {
         const now = new Date();
-        botResponse = `It's ${now.toLocaleTimeString()}. Need help with scheduling something?`;
-      } else if (userInput.includes('who are you') || userInput.includes('who the hell are you')) {
-        botResponse = "I'm your AI assistant, designed to be helpful, harmless, and honest. Ask me anything!";
+        botResponse = `It's currently ${now.toLocaleTimeString()} in your local time zone.`;
+      } else if (userInput.includes('who are you') || userInput.includes('what are you')) {
+        botResponse = "I'm your ZenithNet assistant, designed to help you navigate and make the most of our platform. Feel free to ask me anything!";
       } else if (userInput.includes('help')) {
-        botResponse = "I can help with information, answer questions, generate creative content, or just chat. What's on your mind?";
-      } else if (userInput.includes('theme')) {
-        const nextTheme = theme === 'purple' ? 'blue' : 
-                          theme === 'blue' ? 'green' : 
-                          theme === 'green' ? 'pink' : 'purple';
-        setTheme(nextTheme);
-        botResponse = `Theme changed to ${nextTheme}. How does it look?`;
+        botResponse = "I can help with various tasks! Try asking about features, how to use specific tools, or any general questions about ZenithNet.";
       } else if (userInput.includes('thank')) {
-        botResponse = "You're welcome! I'm happy to help. Anything else you need?";
+        botResponse = "You're very welcome! 😊 Is there anything else I can help with?";
+      } else if (userInput.includes('feature') || userInput.includes('can you do')) {
+        botResponse = "I can answer questions, provide information about ZenithNet, help troubleshoot issues, and guide you through our platform's features. What specifically would you like to know?";
+      } else if (userInput.includes('theme') || userInput.includes('color')) {
+        botResponse = "You can change my theme by clicking the color palette icon in the chat header!";
       }
       
-      setMessages([...newMessages, { sender: 'bot', text: botResponse }]);
+      const botMessage: Message = {
+        id: generateUniqueId(),
+        sender: 'bot',
+        text: botResponse,
+        timestamp: new Date()
+      };
+      
+      setMessages([...updatedMessages, botMessage]);
       setIsTyping(false);
-    }, Math.random() * 1000 + 500); // Random delay for more natural feel
+    }, Math.random() * 1000 + 500); // Random delay between 500-1500ms for more natural feel
   };
 
-  // Fix: Added parameter to the handleKeyPress function
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') handleSendMessage();
   };
 
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
   const cycleTheme = () => {
-    const themes = ['purple', 'blue', 'green', 'pink'];
+    const themes: Array<'purple' | 'blue' | 'green' | 'pink'> = ['purple', 'blue', 'green', 'pink'];
     const currentIndex = themes.indexOf(theme);
     const nextIndex = (currentIndex + 1) % themes.length;
     setTheme(themes[nextIndex]);
   };
 
+  const clearChat = () => {
+    setMessages([
+      { 
+        id: generateUniqueId(), 
+        sender: 'bot', 
+        text: 'Chat history cleared. How can I help you now?',
+        timestamp: new Date()
+      }
+    ]);
+  };
+
   return (
-    <div
-      className={`fixed bottom-4 right-4 flex flex-col transition-all duration-500 rounded-2xl shadow-2xl overflow-hidden backdrop-blur-sm ${
-        expanded
-          ? "w-[340px] sm:w-96 h-[500px] sm:h-[600px] bg-black bg-opacity-90 border border-gray-800"
-          : "w-16 h-16 bg-black bg-opacity-90 border border-gray-800"
-      }`}
-      style={{
-        boxShadow: expanded ? `0 0 30px 5px rgba(${theme === 'purple' ? '128, 90, 213' : 
-                                              theme === 'blue' ? '59, 130, 246' :
-                                              theme === 'green' ? '16, 185, 129' : 
-                                              '236, 72, 153'}, 0.2)` : 'none'
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className={`fixed bottom-4 right-4 flex flex-col rounded-2xl shadow-2xl overflow-hidden z-50`}
+      style={{ 
+        width: expanded ? '350px' : '60px', 
+        height: expanded ? '500px' : '60px',
+        transition: 'width 0.3s ease-out, height 0.3s ease-out'
       }}
     >
+      {/* Glass morphism effect */}
+      <div className={`absolute inset-0 backdrop-blur-lg bg-gradient-to-br ${currentTheme.gradient} opacity-10 z-0`}></div>
+      
+      <div className={`absolute inset-0 bg-black bg-opacity-80 border ${expanded ? 'border-gray-700' : 'border-gray-800'} rounded-2xl z-10`}></div>
+      
       {/* Minimized Player */}
       {!expanded && (
-        <button
-          className={`flex items-center justify-center w-full h-full text-white hover:bg-gray-900 transition-all`}
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="flex items-center justify-center w-full h-full text-white hover:bg-gray-900 transition-all relative z-20"
           onClick={() => setExpanded(true)}
         >
-          <div className="flex items-center justify-center relative">
-            <div className={`absolute w-6 h-6 ${currentTheme.primary} rounded-full opacity-30 animate-ping`}></div>
-            <div className={`w-4 h-4 ${currentTheme.primary} rounded-full z-10`}></div>
+          <div className="flex items-center">
+            <div className={`w-3 h-3 ${currentTheme.dot} rounded-full animate-pulse mr-1`}></div>
+            <div className={`w-2 h-2 ${currentTheme.dot} opacity-80 rounded-full animate-pulse mr-1`} style={{ animationDelay: "0.2s" }}></div>
+            <div className={`w-4 h-4 ${currentTheme.dot} opacity-90 rounded-full animate-pulse`} style={{ animationDelay: "0.4s" }}></div>
           </div>
-        </button>
+        </motion.button>
       )}
 
       {/* Expanded Chatbot */}
       {expanded && (
-        <div className="flex flex-col h-full relative">
-          {/* Glass effect overlay */}
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black to-black opacity-40 pointer-events-none"></div>
-          
-          {/* Header with close button */}
-          <div className={`relative z-10 flex items-center justify-between p-4 border-b border-gray-800 bg-gradient-to-r ${currentTheme.gradient}`}>
+        <div className="flex flex-col h-full relative z-20">
+          {/* Header with controls */}
+          <div className="flex items-center justify-between p-3 border-b border-gray-800 bg-gray-900 bg-opacity-60">
             <div className="flex items-center space-x-2">
-              <div className="relative flex items-center justify-center">
-                <div className={`w-3 h-3 ${currentTheme.light} rounded-full animate-pulse mr-1`}></div>
-                <div className={`w-2 h-2 ${currentTheme.dark} rounded-full animate-pulse mr-1`} style={{ animationDelay: "0.2s" }}></div>
-                <div className={`w-4 h-4 ${currentTheme.primary} rounded-full animate-pulse`} style={{ animationDelay: "0.4s" }}></div>
+              <div className="relative">
+                <div className={`w-3 h-3 ${currentTheme.dot} rounded-full absolute -top-1 -right-1 animate-ping opacity-75`}></div>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`${currentTheme.text}`}>
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
               </div>
-              <h2 className="text-sm font-bold text-white tracking-wider">MazsAI Chat</h2>
-              <span className="text-xs bg-black bg-opacity-30 text-green-400 px-2 py-0.5 rounded-full">ONLINE</span>
+              <h2 className="text-sm font-medium text-gray-200">ZENITH ASSISTANT</h2>
+              <span className="text-xs text-green-400 flex items-center">
+                <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1 animate-pulse"></span>
+                Online
+              </span>
             </div>
+            
             <div className="flex items-center space-x-2">
-              <button
+              {/* Theme switcher */}
+              <motion.button
+                whileHover={{ rotate: 180 }}
+                transition={{ duration: 0.3 }}
                 onClick={cycleTheme}
-                className="text-white opacity-70 hover:opacity-100 focus:outline-none p-1"
+                className="text-gray-400 hover:text-white focus:outline-none p-1"
                 title="Change theme"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="5"></circle>
-                  <path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"></path>
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <circle cx="12" cy="12" r="4"></circle>
+                  <line x1="21.17" y1="8" x2="12" y2="8"></line>
+                  <line x1="3.95" y1="6.06" x2="8.54" y2="14"></line>
+                  <line x1="10.88" y1="21.94" x2="15.46" y2="14"></line>
                 </svg>
-              </button>
-              <button
-                className="text-white opacity-70 hover:opacity-100 focus:outline-none transform transition hover:rotate-90 p-1"
+              </motion.button>
+              
+              {/* Clear chat */}
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                onClick={clearChat}
+                className="text-gray-400 hover:text-white focus:outline-none p-1"
+                title="Clear chat"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 6h18"></path>
+                  <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                </svg>
+              </motion.button>
+              
+              {/* Minimize button */}
+              <motion.button
+                whileHover={{ rotate: 90 }}
+                transition={{ duration: 0.2 }}
+                className="text-gray-400 hover:text-white focus:outline-none p-1"
                 onClick={() => setExpanded(false)}
+                title="Minimize"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="18" y1="6" x2="6" y2="18"></line>
                   <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
-              </button>
+              </motion.button>
             </div>
           </div>
 
-          {/* Messages area - Fixed to hide scrollbar while maintaining functionality */}
+          {/* Messages area */}
           <div 
             ref={messageContainerRef}
-            className="relative z-10 flex-1 p-4 overflow-y-auto space-y-3 scrollbar-hide" 
-            style={{ 
-              scrollBehavior: 'smooth',
-              msOverflowStyle: 'none', /* IE and Edge */
-              scrollbarWidth: 'none', /* Firefox */
-              WebkitOverflowScrolling: 'touch'
-            }}
+            className="flex-1 p-4 overflow-y-auto space-y-3 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent" 
+            style={{ scrollBehavior: 'smooth' }}
           >
-            {/* Custom style to hide scrollbar in WebKit browsers */}
-            <style>
-              {`
-                .scrollbar-hide::-webkit-scrollbar {
-                  display: none;
-                }
-              `}
-            </style>
-            
-            <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-black to-transparent pointer-events-none"></div>
-            
-            {messages.map((message, index) => (
-              <div key={index} className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                {message.sender === 'bot' && (
-                  <div className="h-8 w-8 rounded-full bg-gray-800 flex items-center justify-center mr-2 mt-1">
-                    <div className={`h-5 w-5 ${currentTheme.accent}`}>
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
-                      </svg>
-                    </div>
-                  </div>
-                )}
-                
-                <div 
-                  className={`max-w-[75%] px-4 py-2.5 rounded-2xl shadow-md transition-all duration-200 ${
-                    message.sender === 'user'
-                      ? `${currentTheme.primary} text-white rounded-br-none hover:scale-[1.02]`
-                      : 'bg-gray-800 text-gray-100 rounded-bl-none hover:scale-[1.02] border border-gray-700'
-                  }`}
+            <AnimatePresence>
+              {messages.map((message) => (
+                <motion.div 
+                  key={message.id}
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ duration: 0.3 }}
+                  className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'} group`}
                 >
-                  <div className="text-sm sm:text-base leading-relaxed">{message.text}</div>
-                </div>
-                
-                {message.sender === 'user' && (
-                  <div className="h-8 w-8 rounded-full bg-gray-700 flex items-center justify-center ml-2 mt-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-300" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                    </svg>
+                  <div className="flex flex-col">
+                    {message.sender === 'bot' && (
+                      <span className="text-xs text-gray-500 ml-2 mb-1">Assistant • {formatTime(message.timestamp)}</span>
+                    )}
+                    
+                    <div 
+                      className={`max-w-[85%] px-4 py-2.5 rounded-2xl shadow-md transition-all duration-200 ${
+                        message.sender === 'user'
+                          ? `${currentTheme.primary} text-white rounded-br-none group-hover:shadow-lg`
+                          : 'bg-gray-800 bg-opacity-80 text-gray-200 rounded-bl-none group-hover:shadow-lg'
+                      }`}
+                    >
+                      {message.text}
+                    </div>
+                    
+                    {message.sender === 'user' && (
+                      <span className="text-xs text-gray-500 text-right mr-2 mt-1">You • {formatTime(message.timestamp)}</span>
+                    )}
                   </div>
-                )}
-              </div>
-            ))}
+                </motion.div>
+              ))}
+            </AnimatePresence>
             
             {isTyping && (
-              <div className="flex justify-start">
-                <div className="h-8 w-8 rounded-full bg-gray-800 flex items-center justify-center mr-2">
-                  <div className={`h-5 w-5 ${currentTheme.accent}`}>
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
-                    </svg>
-                  </div>
-                </div>
-                <div className="bg-gray-800 border border-gray-700 text-gray-200 px-4 py-3 rounded-2xl rounded-bl-none shadow-md">
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex justify-start"
+              >
+                <div className="bg-gray-800 bg-opacity-80 text-gray-200 px-4 py-3 rounded-2xl rounded-bl-none shadow-md">
                   <div className="flex space-x-1.5">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0.4s" }}></div>
+                    <motion.div 
+                      animate={{ y: [0, -5, 0] }}
+                      transition={{ repeat: Infinity, duration: 0.8 }}
+                      className="w-2 h-2 bg-gray-400 rounded-full"
+                    ></motion.div>
+                    <motion.div 
+                      animate={{ y: [0, -5, 0] }}
+                      transition={{ repeat: Infinity, duration: 0.8, delay: 0.2 }}
+                      className="w-2 h-2 bg-gray-400 rounded-full"
+                    ></motion.div>
+                    <motion.div 
+                      animate={{ y: [0, -5, 0] }}
+                      transition={{ repeat: Infinity, duration: 0.8, delay: 0.4 }}
+                      className="w-2 h-2 bg-gray-400 rounded-full"
+                    ></motion.div>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             )}
-            
             <div ref={messagesEndRef} />
-            <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-black to-transparent pointer-events-none"></div>
           </div>
 
           {/* Input area */}
-          <div className="relative z-10 border-t border-gray-800 p-4 bg-black bg-opacity-95">
+          <div className="border-t border-gray-800 p-3 bg-gray-900 bg-opacity-60">
             <div className="flex items-center space-x-2">
-              <input
-                type="text"
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Message MazsAI T1"
-                className={`flex-1 bg-gray-900 text-white border border-gray-700 rounded-xl px-4 py-3 focus:outline-none ${currentTheme.ring} focus:ring-2 transition-shadow text-sm`}
-              />
-              <button
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="relative flex-1"
+              >
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={inputText}
+                  onChange={(e) => setInputText(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Type your message..."
+                  className={`w-full bg-gray-800 bg-opacity-70 text-white border border-gray-700 rounded-full px-4 py-2.5 pr-10 focus:outline-none focus:ring-2 ${currentTheme.ring} placeholder-gray-500 transition-all duration-200`}
+                />
+                {inputText.length > 0 && (
+                  <motion.button
+                    initial={{ opacity: 0, scale: 0 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0 }}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                    onClick={() => setInputText('')}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <line x1="15" y1="9" x2="9" y2="15"></line>
+                      <line x1="9" y1="9" x2="15" y2="15"></line>
+                    </svg>
+                  </motion.button>
+                )}
+              </motion.div>
+              
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={handleSendMessage}
-                className={`${currentTheme.primary} text-white p-3 rounded-xl ${inputText.trim() === '' ? 'opacity-50 cursor-not-allowed' : currentTheme.hover} focus:outline-none transition-all duration-200 focus:ring-2 focus:ring-offset-2 focus:ring-offset-black ${currentTheme.ring}`}
+                className={`${currentTheme.primary} text-white p-2.5 rounded-full ${currentTheme.hover} focus:outline-none transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
                 disabled={inputText.trim() === ''}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="22" y1="2" x2="11" y2="13"></line>
                   <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                 </svg>
-              </button>
-            </div>
-            
-            {/* Quick action buttons - Fixed to hide scrollbar while maintaining functionality */}
-            <div 
-              className="flex mt-3 space-x-2 overflow-x-auto pb-1 scrollbar-hide" 
-              style={{ 
-                scrollbarWidth: 'none', /* Firefox */
-                msOverflowStyle: 'none', /* IE and Edge */
-                WebkitOverflowScrolling: 'touch'
-              }}
-            >
-              <button 
-                onClick={() => setInputText("Hello there!")}
-                className="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1.5 rounded-full whitespace-nowrap transition-colors"
-              >
-                👋 Say hello
-              </button>
-              <button 
-                onClick={() => setInputText("What time is it?")}
-                className="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1.5 rounded-full whitespace-nowrap transition-colors"
-              >
-                🕒 Check time
-              </button>
-              <button 
-                onClick={() => setInputText("Who are you?")}
-                className="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1.5 rounded-full whitespace-nowrap transition-colors"
-              >
-                🤔 Your identity
-              </button>
-              <button 
-                onClick={() => setInputText("Change theme")}
-                className="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1.5 rounded-full whitespace-nowrap transition-colors"
-              >
-                🎨 Change theme
-              </button>
+              </motion.button>
             </div>
           </div>
 
-          {/* Footer with branding */}
-          <div className="relative z-10 px-4 py-2 text-xs text-gray-500 text-center bg-black border-t border-gray-800 flex items-center justify-between">
-            <span>MazsAI T1 </span>
-            <span>Powered by <span className={currentTheme.accent}>MazsAI</span></span>
+          {/* Footer with info */}
+          <div className="px-3 py-2 text-xs text-gray-500 text-center bg-gray-900 bg-opacity-60 border-t border-gray-800">
+            ZenithNet Assistant • Powered by AI
           </div>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 };
 
