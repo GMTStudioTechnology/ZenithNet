@@ -1,6 +1,7 @@
 import { ID, Query } from "appwrite";
 import { databases, appwriteConfig } from "./config";
 
+// Create a follow relationship by storing relational links to Users
 export async function followUser(followerId: string, followingId: string) {
   try {
     const newFollow = await databases.createDocument(
@@ -8,11 +9,11 @@ export async function followUser(followerId: string, followingId: string) {
       appwriteConfig.followsCollectionId,
       ID.unique(),
       {
+        // Using relations to link to Users collection if configured
         followerId,
         followingId,
       }
     );
-
     return newFollow;
   } catch (error) {
     console.error("Error following user:", error);
@@ -20,9 +21,10 @@ export async function followUser(followerId: string, followingId: string) {
   }
 }
 
+// Remove the follow relationship between two users
 export async function unfollowUser(followerId: string, followingId: string) {
   try {
-    // First find the follow document
+    // Find the document that represents the follow relationship
     const followRecords = await databases.listDocuments(
       appwriteConfig.databaseId,
       appwriteConfig.followsCollectionId,
@@ -31,18 +33,15 @@ export async function unfollowUser(followerId: string, followingId: string) {
         Query.equal("followingId", followingId),
       ]
     );
-
     if (followRecords.documents.length === 0) {
       throw new Error("Follow relationship not found");
     }
-
     // Delete the follow document
     await databases.deleteDocument(
       appwriteConfig.databaseId,
       appwriteConfig.followsCollectionId,
       followRecords.documents[0].$id
     );
-
     return { success: true };
   } catch (error) {
     console.error("Error unfollowing user:", error);
@@ -50,6 +49,7 @@ export async function unfollowUser(followerId: string, followingId: string) {
   }
 }
 
+// Check if a follow relationship exists between two users
 export async function isFollowing(followerId: string, followingId: string) {
   try {
     const followRecords = await databases.listDocuments(
@@ -60,7 +60,6 @@ export async function isFollowing(followerId: string, followingId: string) {
         Query.equal("followingId", followingId),
       ]
     );
-
     return followRecords.documents.length > 0;
   } catch (error) {
     console.error("Error checking follow status:", error);
@@ -68,6 +67,7 @@ export async function isFollowing(followerId: string, followingId: string) {
   }
 }
 
+// Get the total number of followers for a given user (users following this user)
 export async function getFollowersCount(userId: string) {
   try {
     const followers = await databases.listDocuments(
@@ -75,7 +75,6 @@ export async function getFollowersCount(userId: string) {
       appwriteConfig.followsCollectionId,
       [Query.equal("followingId", userId)]
     );
-
     return followers.total;
   } catch (error) {
     console.error("Error getting followers count:", error);
@@ -83,6 +82,7 @@ export async function getFollowersCount(userId: string) {
   }
 }
 
+// Get the total number of users that a given user is following
 export async function getFollowingCount(userId: string) {
   try {
     const following = await databases.listDocuments(
@@ -90,7 +90,6 @@ export async function getFollowingCount(userId: string) {
       appwriteConfig.followsCollectionId,
       [Query.equal("followerId", userId)]
     );
-
     return following.total;
   } catch (error) {
     console.error("Error getting following count:", error);
