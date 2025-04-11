@@ -1,12 +1,7 @@
 import { useState, useEffect } from "react";
-import { 
-  followUser, 
-  unfollowUser, 
-  isFollowing as checkIsFollowing 
-} from "@/lib/appwrite/followService";
-import { databases, appwriteConfig } from "@/lib/appwrite/config"; // adjust path
+import { databases, appwriteConfig } from "@/lib/appwrite/config";
+import { useToast } from "@/components/ui/use-toast";
 
-import { useToast } from "@/components/ui/use-toast"; // adjust path to your toast hook
 
 interface FollowButtonProps {
   currentUserId: string;
@@ -26,12 +21,10 @@ const FollowButton = ({
 
   const { toast } = useToast();
 
-  // 1) Fetch the target user’s name from the Users collection
+  // Fetch the target user's name
   useEffect(() => {
     const fetchTargetUserName = async () => {
       try {
-        // Replace "name" with whatever attribute holds the display name
-        // Also ensure your "userCollectionId" is correct in your .env
         const userDoc = await databases.getDocument(
           appwriteConfig.databaseId,
           appwriteConfig.userCollectionId,
@@ -48,35 +41,37 @@ const FollowButton = ({
     }
   }, [targetUserId]);
 
-  // 2) Check if already following
+  // Simulate follow status check
   useEffect(() => {
-    const checkFollowStatus = async () => {
+    const simulateFollowStatus = () => {
       setIsLoading(true);
-      try {
-        const followStatus = await checkIsFollowing(currentUserId, targetUserId);
-        setIsFollowing(followStatus);
-      } catch (error) {
-        console.error("Error checking follow status:", error);
-      } finally {
+      // Simulate API call with a timeout
+      setTimeout(() => {
+        // Randomly determine if following or not
+        setIsFollowing(Math.random() > 0.5);
         setIsLoading(false);
-      }
+      }, 800);
     };
 
-    checkFollowStatus();
+    if (currentUserId && targetUserId) {
+      simulateFollowStatus();
+    }
   }, [currentUserId, targetUserId]);
 
-  // 3) Handle the follow/unfollow logic
+  // Handle follow/unfollow
   const handleFollowToggle = async () => {
     try {
-      if (isFollowing) {
-        await unfollowUser(currentUserId, targetUserId);
-        setIsFollowing(false);
-        if (onFollowChange) await onFollowChange(false);
-      } else {
-        await followUser(currentUserId, targetUserId);
-        setIsFollowing(true);
-        if (onFollowChange) await onFollowChange(true);
-      }
+      // Toggle the follow status locally
+      const newFollowStatus = !isFollowing;
+      setIsFollowing(newFollowStatus);
+      
+      // Simulate API call
+      if (onFollowChange) await onFollowChange(newFollowStatus);
+
+      toast({
+        title: newFollowStatus ? `Following ${targetUserName}` : `Unfollowed ${targetUserName}`,
+        description: newFollowStatus ? "You are now following this user." : "You are no longer following this user.",
+      });
     } catch (error) {
       console.error("Error toggling follow status:", error);
 
@@ -88,7 +83,7 @@ const FollowButton = ({
       setTimeout(() => {
         toast({
           title: `Failed to follow ${targetUserName}`,
-          description: `Why does that happen ? I don't actually know. Maybe ask the backend devs?`,
+          description: `Why does that happen? I don't actually know. Maybe ask the backend devs?`,
         });
 
         // Revert
@@ -106,16 +101,15 @@ const FollowButton = ({
     );
   }
 
-  // 4) Render the button
   return (
     <button
       onClick={handleFollowToggle}
       className={`h-12 px-5 flex-center gap-2 rounded-lg transition-colors ${
         tempStyle
-          ? "bg-white text-black"         // Temporary error style
+          ? "bg-white text-black"
           : isFollowing
-          ? "bg-dark-4 text-light-1"      // Normal "Unfollow" style
-          : "bg-primary-500 text-light-1" // Normal "Follow" style
+          ? "bg-dark-4 text-light-1"
+          : "bg-primary-500 text-light-1"
       }`}
     >
       <p className="flex whitespace-nowrap small-medium">
